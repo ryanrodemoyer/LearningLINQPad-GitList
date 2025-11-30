@@ -14,6 +14,12 @@
 			<TextBox Name="txtRepositoryPath" Padding="2" Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}" />
 		</DockPanel>
 
+		<Label Padding="0,15,0,2">Beyond Compare Executable Path (optional):</Label>
+		<DockPanel>
+			<Button Name="btnBrowseBeyondCompare" DockPanel.Dock="Right" Content="Browse..." Padding="10,3" Margin="6,0,0,0" Click="btnBrowseBeyondCompare_Click" />
+			<TextBox Name="txtBeyondComparePath" Padding="2" Text="{Binding BeyondComparePath, UpdateSourceTrigger=PropertyChanged}" />
+		</DockPanel>
+
 		<Label Padding="0,15,0,2">Friendly name for this connection (optional):</Label>
 		<TextBox Name="txtFriendlyName" Padding="2" Text="{Binding ConnectionInfo.DisplayName}" />
 

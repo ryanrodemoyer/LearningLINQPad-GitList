@@ -54,24 +54,45 @@ namespace LearningLINQPad.GitList
 			DialogResult = true;
 		}
 
-		void btnBrowse_Click(object sender, RoutedEventArgs e)
+	void btnBrowse_Click(object sender, RoutedEventArgs e)
+	{
+		var dialog = new FolderBrowserDialog
 		{
-			var dialog = new FolderBrowserDialog
-			{
-				Description = "Select Git Repository Folder",
-				ShowNewFolderButton = false
-			};
+			Description = "Select Git Repository Folder",
+			ShowNewFolderButton = false
+		};
 
-			var props = (ConnectionProperties)DataContext;
-			if (!string.IsNullOrWhiteSpace(props.RepositoryPath))
-			{
-				dialog.SelectedPath = props.RepositoryPath;
-			}
-
-			if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-			{
-				props.RepositoryPath = dialog.SelectedPath;
-			}
+		var props = (ConnectionProperties)DataContext;
+		if (!string.IsNullOrWhiteSpace(props.RepositoryPath))
+		{
+			dialog.SelectedPath = props.RepositoryPath;
 		}
+
+		if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+		{
+			props.RepositoryPath = dialog.SelectedPath;
+		}
+	}
+
+	void btnBrowseBeyondCompare_Click(object sender, RoutedEventArgs e)
+	{
+		var dialog = new System.Windows.Forms.OpenFileDialog
+		{
+			Title = "Select Beyond Compare Executable",
+			Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
+			CheckFileExists = true
+		};
+
+		var props = (ConnectionProperties)DataContext;
+		if (!string.IsNullOrWhiteSpace(props.BeyondComparePath))
+		{
+			dialog.FileName = props.BeyondComparePath;
+		}
+
+		if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+		{
+			props.BeyondComparePath = dialog.FileName;
+		}
+	}
 	}
 }

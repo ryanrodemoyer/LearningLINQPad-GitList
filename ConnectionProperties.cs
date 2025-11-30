@@ -18,17 +18,27 @@ namespace LearningLINQPad.GitList
 			ConnectionInfo = cxInfo;
 		}
 
-		public string RepositoryPath
+	public string RepositoryPath
+	{
+		get => (string)DriverData.Element("RepositoryPath") ?? "";
+		set
 		{
-			get => (string)DriverData.Element("RepositoryPath") ?? "";
-			set
-			{
-				DriverData.SetElementValue("RepositoryPath", value);
-				OnPropertyChanged(nameof(RepositoryPath));
-			}
+			DriverData.SetElementValue("RepositoryPath", value);
+			OnPropertyChanged(nameof(RepositoryPath));
 		}
+	}
 
-		public event PropertyChangedEventHandler PropertyChanged;
+	public string BeyondComparePath
+	{
+		get => (string)DriverData.Element("BeyondComparePath") ?? "";
+		set
+		{
+			DriverData.SetElementValue("BeyondComparePath", value);
+			OnPropertyChanged(nameof(BeyondComparePath));
+		}
+	}
+
+	public event PropertyChangedEventHandler PropertyChanged;
 
 		protected virtual void OnPropertyChanged(string propertyName)
 		{

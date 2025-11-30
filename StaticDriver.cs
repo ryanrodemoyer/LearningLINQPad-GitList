@@ -102,23 +102,7 @@ namespace LearningLINQPad.GitList
 						}
 					});
 
-					// Add LocalBranches collection
-					schema.Add(new ExplorerItem("LocalBranches", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-					{
-						IsEnumerable = true,
-						ToolTipText = "Local branches only",
-						DragText = "LocalBranches"
-					});
-
-					// Add RemoteBranches collection
-					schema.Add(new ExplorerItem("RemoteBranches", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-					{
-						IsEnumerable = true,
-						ToolTipText = "Remote branches only",
-						DragText = "RemoteBranches"
-					});
-
-					// Add Tags collection
+				// Add Tags collection
 					schema.Add(new ExplorerItem("Tags", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
 					{
 						IsEnumerable = true,
@@ -151,18 +135,76 @@ namespace LearningLINQPad.GitList
 						}
 					});
 
-					// Add Head property
-					schema.Add(new ExplorerItem("Head", ExplorerItemKind.Property, ExplorerIcon.ScalarFunction)
+				// Add Stashes collection
+				schema.Add(new ExplorerItem("Stashes", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+				{
+					IsEnumerable = true,
+					ToolTipText = "All stashes in the repository",
+					DragText = "Stashes",
+					Children = new List<ExplorerItem>
 					{
-						ToolTipText = "Current HEAD reference",
-						DragText = "Head"
-					});
+						new ExplorerItem("Index", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("Reference", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("Message", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("When", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("WorkTree", ExplorerItemKind.ReferenceLink, ExplorerIcon.ManyToOne),
+						new ExplorerItem("cmd_Apply", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Pop", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Drop", ExplorerItemKind.Property, ExplorerIcon.Box)
+					}
+				});
+
+				// Add Head property
+				schema.Add(new ExplorerItem("Head", ExplorerItemKind.Property, ExplorerIcon.Column)
+				{
+					ToolTipText = "Current HEAD reference",
+					DragText = "Head"
+				});
 
 					// Add RepositoryPath property
 					schema.Add(new ExplorerItem("RepositoryPath", ExplorerItemKind.Property, ExplorerIcon.Column)
 					{
 						ToolTipText = "Path to the repository",
 						DragText = "RepositoryPath"
+					});
+
+					// Add Status collection (all files with changes)
+					schema.Add(new ExplorerItem("Status", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+					{
+						IsEnumerable = true,
+						ToolTipText = "All files with status changes",
+						DragText = "Status",
+						Children = new List<ExplorerItem>
+						{
+							new ExplorerItem("FilePath", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("Status", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("IndexStatus", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("WorkDirStatus", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("IsStaged", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("HasUnstagedChanges", ExplorerItemKind.Property, ExplorerIcon.Column),
+							new ExplorerItem("IsUntracked", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("IsIgnored", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("IsConflicted", ExplorerItemKind.Property, ExplorerIcon.Column),
+						new ExplorerItem("cmd_Stage", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Unstage", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Commit", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Discard", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_ViewDiff", ExplorerItemKind.Property, ExplorerIcon.Box),
+						new ExplorerItem("cmd_Stash", ExplorerItemKind.Property, ExplorerIcon.Box)
+					}
+				});
+
+				// Add status properties
+					schema.Add(new ExplorerItem("IsClean", ExplorerItemKind.Property, ExplorerIcon.Column)
+					{
+						ToolTipText = "Is the working directory clean?",
+						DragText = "IsClean"
+					});
+
+					schema.Add(new ExplorerItem("ChangedFilesCount", ExplorerItemKind.Property, ExplorerIcon.Column)
+					{
+						ToolTipText = "Number of files with changes",
+						DragText = "ChangedFilesCount"
 					});
 
 					return schema;
@@ -188,12 +230,12 @@ namespace LearningLINQPad.GitList
 			return null; // Use default constructor
 		}
 
-		public override void InitializeContext(IConnectionInfo cxInfo, object context, QueryExecutionManager executionManager)
-		{
-			// Initialize the static GitContext with the repository path
-			var props = new ConnectionProperties(cxInfo);
-			GitContext.Initialize(props.RepositoryPath);
-		}
+	public override void InitializeContext(IConnectionInfo cxInfo, object context, QueryExecutionManager executionManager)
+	{
+		// Initialize the static GitContext with the repository path and Beyond Compare path
+		var props = new ConnectionProperties(cxInfo);
+		GitContext.Initialize(props.RepositoryPath, props.BeyondComparePath);
+	}
 
 		public override IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)
 		{
