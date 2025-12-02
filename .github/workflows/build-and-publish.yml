@@ -44,11 +44,6 @@ jobs:
         with:
           fetch-depth: 0  # Full history for versioning
 
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -183,11 +178,6 @@ jobs:
         with:
           name: nuget-package-${{ needs.build.outputs.version }}
           path: ./nupkg
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
 
       - name: Publish to NuGet.org
         shell: pwsh
