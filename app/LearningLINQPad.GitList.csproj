@@ -5,7 +5,13 @@
 		<UseWpf>true</UseWpf>
 		<AssemblyName>LearningLINQPad.GitList</AssemblyName>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageTags>linqpaddriver</PackageTags>
+		<PackageTags>linqpaddriver;git</PackageTags>
+		<Title>LearningLINQPad.GitList</Title>
+		<Description>In LINQPad manage a Git repo using the Connections window. View modified files, commits, branches and remotes.</Description>
+		<Copyright>Learning LINQPad / Ryan Rodemoyer</Copyright>
+		<PackageProjectUrl>https://www.learninglinqpad.com</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ryanrodemoyer/LearningLINQPad-GitList</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
