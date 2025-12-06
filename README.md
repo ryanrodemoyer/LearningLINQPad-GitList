@@ -3,7 +3,10 @@
 A LINQPad driver for exploring and managing Git repositories using LINQ. Query commits, branches, tags, and working directory status directly from LINQPad.
 
 [![Build and Test](https://github.com/ryanrodemoyer/LearningLINQPad-GitList/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/ryanrodemoyer/LearningLINQPad-GitList/actions/workflows/build-and-publish.yml)
-[![NuGet](https://img.shields.io/nuget/v/LearningLINQPad.GitList.svg)](https://www.nuget.org/packages/LearningLINQPad.GitList)
+[![NuGet Version](https://img.shields.io/nuget/v/LearningLINQPad.GitList)](https://www.nuget.org/packages/LearningLINQPad.GitList)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/LearningLINQPad.GitList)](https://www.nuget.org/packages/LearningLINQPad.GitList)
+[![License](https://img.shields.io/github/license/ryanrodemoyer/LearningLINQPad-GitList)](LICENSE)
+![.NET 8.0](https://img.shields.io/badge/.NET-8.0--windows-512BD4)
 
 ## Installation
 

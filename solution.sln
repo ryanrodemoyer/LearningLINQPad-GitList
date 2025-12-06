@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11222.16 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{F95F473B-E98A-ACD6-1986-755F447BE36F}"
 EndProject
@@ -10,6 +10,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LearningLINQPad.GitList.Tests", "tests\LearningLINQPad.GitList.Tests.csproj", "{DA8A9911-7151-4859-95E2-E0023A8DEC96}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "items", "items", "{F1B37291-FC01-4DDD-9492-1256505732E1}"
+	ProjectSection(SolutionItems) = preProject
+		AGENTS.md = AGENTS.md
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,5 +58,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{45FD8821-18C4-4AFD-9387-EDBAC5BE740C} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
 		{DA8A9911-7151-4859-95E2-E0023A8DEC96} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BB156E4A-18AE-418A-B142-10ABBC51214F}
 	EndGlobalSection
 EndGlobal
