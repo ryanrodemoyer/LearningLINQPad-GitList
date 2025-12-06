@@ -1,48 +1,46 @@
-using LINQPad.Extensibility.DataContext;
 using System.ComponentModel;
-using System.Xml.Linq;
+
+using LINQPad.Extensibility.DataContext;
 
 namespace LearningLINQPad.GitList
 {
-	/// <summary>
-	/// Wrapper to read/write connection properties. This acts as our ViewModel - we will bind to it in ConnectionDialog.xaml.
-	/// </summary>
-	class ConnectionProperties : INotifyPropertyChanged
-	{
-		public IConnectionInfo ConnectionInfo { get; private set; }
+    /// <summary>
+    /// Wrapper to read/write connection properties. This acts as our ViewModel - we will bind to it in ConnectionDialog.xaml.
+    /// </summary>
+    class ConnectionProperties : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
 
-		XElement DriverData => ConnectionInfo.DriverData;
+        public IConnectionInfo ConnectionInfo { get; private set; }
 
-		public ConnectionProperties (IConnectionInfo cxInfo)
-		{
-			ConnectionInfo = cxInfo;
-		}
+        public ConnectionProperties(IConnectionInfo cxInfo)
+        {
+            ConnectionInfo = cxInfo;
+        }
 
-	public string RepositoryPath
-	{
-		get => (string)DriverData.Element("RepositoryPath") ?? "";
-		set
-		{
-			DriverData.SetElementValue("RepositoryPath", value);
-			OnPropertyChanged(nameof(RepositoryPath));
-		}
-	}
+        public string RepositoryPath
+        {
+            get => (string)ConnectionInfo.DriverData.Element("RepositoryPath") ?? "";
+            set
+            {
+                ConnectionInfo.DriverData.SetElementValue("RepositoryPath", value);
+                OnPropertyChanged(nameof(RepositoryPath));
+            }
+        }
 
-	public string BeyondComparePath
-	{
-		get => (string)DriverData.Element("BeyondComparePath") ?? "";
-		set
-		{
-			DriverData.SetElementValue("BeyondComparePath", value);
-			OnPropertyChanged(nameof(BeyondComparePath));
-		}
-	}
+        public string BeyondComparePath
+        {
+            get => (string)ConnectionInfo.DriverData.Element("BeyondComparePath") ?? "";
+            set
+            {
+                ConnectionInfo.DriverData.SetElementValue("BeyondComparePath", value);
+                OnPropertyChanged(nameof(BeyondComparePath));
+            }
+        }
 
-	public event PropertyChangedEventHandler PropertyChanged;
-
-		protected virtual void OnPropertyChanged(string propertyName)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
-	}
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
 }

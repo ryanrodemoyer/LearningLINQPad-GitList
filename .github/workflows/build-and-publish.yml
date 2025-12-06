@@ -5,11 +5,13 @@ on:
     branches: [main, develop]
     paths:
       - 'app/**'
+      - 'tests/**'
       - '.github/workflows/build-and-publish.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'app/**'
+      - 'tests/**'
       - '.github/workflows/build-and-publish.yml'
   workflow_dispatch:
     inputs:
@@ -28,6 +30,7 @@ concurrency:
 permissions:
   contents: read
   packages: write
+  checks: write
 
 jobs:
   build:
@@ -48,12 +51,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/app/LearningLINQPad.GitList.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore app/LearningLINQPad.GitList.csproj
+        run: |
+          dotnet restore app/LearningLINQPad.GitList.csproj
+          dotnet restore tests/LearningLINQPad.GitList.Tests.csproj
 
       - name: Get version from project
         id: get_version
@@ -84,15 +89,70 @@ jobs:
       - name: Build project
         run: dotnet build app/LearningLINQPad.GitList.csproj --configuration Release --no-restore /p:Version=${{ steps.get_version.outputs.version }}
 
-      - name: Run tests (if test project exists)
-        continue-on-error: true
+      - name: Build tests
+        run: dotnet build tests/LearningLINQPad.GitList.Tests.csproj --configuration Release --no-restore
+
+      - name: Run tests with coverage
         run: |
-          if (Test-Path "tests/LearningLINQPad.GitList.Tests.csproj") {
-            dotnet test tests/LearningLINQPad.GitList.Tests.csproj --configuration Release --no-build --verbosity normal
-          } else {
-            Write-Host "No test project found, skipping tests"
-          }
+          dotnet test tests/LearningLINQPad.GitList.Tests.csproj `
+            --configuration Release `
+            --no-build `
+            --verbosity normal `
+            --logger "trx;LogFileName=test-results.trx" `
+            --results-directory ./TestResults `
+            --collect:"XPlat Code Coverage" `
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
         shell: pwsh
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ steps.get_version.outputs.version }}
+          path: ./TestResults/**/*.trx
+          retention-days: 30
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-${{ steps.get_version.outputs.version }}
+          path: ./TestResults/**/coverage.cobertura.xml
+          retention-days: 30
+
+      - name: Generate coverage report summary
+        if: always()
+        shell: pwsh
+        run: |
+          $coverageFile = Get-ChildItem -Path ./TestResults -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+          if ($coverageFile) {
+            [xml]$coverage = Get-Content $coverageFile.FullName
+            $lineRate = [math]::Round([double]$coverage.coverage.'line-rate' * 100, 2)
+            $branchRate = [math]::Round([double]$coverage.coverage.'branch-rate' * 100, 2)
+            
+            echo "## Test Results :test_tube:" >> $env:GITHUB_STEP_SUMMARY
+            echo "" >> $env:GITHUB_STEP_SUMMARY
+            echo "### Code Coverage" >> $env:GITHUB_STEP_SUMMARY
+            echo "" >> $env:GITHUB_STEP_SUMMARY
+            echo "| Metric | Coverage |" >> $env:GITHUB_STEP_SUMMARY
+            echo "|--------|----------|" >> $env:GITHUB_STEP_SUMMARY
+            echo "| Line Coverage | $lineRate% |" >> $env:GITHUB_STEP_SUMMARY
+            echo "| Branch Coverage | $branchRate% |" >> $env:GITHUB_STEP_SUMMARY
+            echo "" >> $env:GITHUB_STEP_SUMMARY
+          } else {
+            echo "## Test Results :test_tube:" >> $env:GITHUB_STEP_SUMMARY
+            echo "" >> $env:GITHUB_STEP_SUMMARY
+            echo "Coverage report not found." >> $env:GITHUB_STEP_SUMMARY
+          }
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results
+          path: ./TestResults/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: true
 
       - name: Create NuGet package
         run: dotnet pack app/LearningLINQPad.GitList.csproj --configuration Release --no-build --output ./nupkg /p:Version=${{ steps.get_version.outputs.version }}

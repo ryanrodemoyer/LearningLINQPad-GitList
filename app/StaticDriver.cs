@@ -1,13 +1,8 @@
-using LINQPad;
-using LINQPad.Extensibility.DataContext;
-
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.IO;
+
+using LINQPad.Extensibility.DataContext;
 
 namespace LearningLINQPad.GitList
 {
@@ -52,18 +47,27 @@ namespace LearningLINQPad.GitList
 
             try
             {
-                using (var repo = new LibGit2Sharp.Repository(props.RepositoryPath))
+                using var re3po = new LibGit2Sharp.Repository(props.RepositoryPath);
+            }
+            catch (Exception ex)
+            {
+                // If we can't open the repository, return an empty schema
+                return new List<ExplorerItem>
                 {
-                    var schema = new List<ExplorerItem>();
+                    new ExplorerItem($"Error: {ex.Message}", ExplorerItemKind.Property, ExplorerIcon.Box)
+                };
+            }
 
-                    // Add Commits collection
-                    schema.Add(new ExplorerItem("Commits", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "All commits in the repository",
-                        DragText = "Commits",
-                        Children = new List<ExplorerItem>
-                        {
+            var schema = new List<ExplorerItem>
+            {
+                // Add Commits collection
+                new ExplorerItem("Commits", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "All commits in the repository",
+                    DragText = "Commits",
+                    Children =
+                        [
                             new ExplorerItem("Sha", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("ShortSha", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Message", ExplorerItemKind.Property, ExplorerIcon.Column),
@@ -78,17 +82,17 @@ namespace LearningLINQPad.GitList
                             new ExplorerItem("TreeSha", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Parents", ExplorerItemKind.CollectionLink, ExplorerIcon.OneToMany),
                             new ExplorerItem("TreeEntries", ExplorerItemKind.CollectionLink, ExplorerIcon.OneToMany)
-                        }
-                    });
+                        ]
+                },
 
-                    // Add Branches collection
-                    schema.Add(new ExplorerItem("Branches", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "All branches (local and remote)",
-                        DragText = "Branches",
-                        Children = new List<ExplorerItem>
-                        {
+                // Add Branches collection
+                new ExplorerItem("Branches", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "All branches (local and remote)",
+                    DragText = "Branches",
+                    Children =
+                        [
                             new ExplorerItem("Name", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("CanonicalName", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("IsRemote", ExplorerItemKind.Property, ExplorerIcon.Column),
@@ -99,17 +103,17 @@ namespace LearningLINQPad.GitList
                             new ExplorerItem("BehindBy", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Tip", ExplorerItemKind.ReferenceLink, ExplorerIcon.ManyToOne),
                             new ExplorerItem("Commits", ExplorerItemKind.CollectionLink, ExplorerIcon.OneToMany)
-                        }
-                    });
+                        ]
+                },
 
-                    // Add Tags collection
-                    schema.Add(new ExplorerItem("Tags", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "All tags in the repository",
-                        DragText = "Tags",
-                        Children = new List<ExplorerItem>
-                        {
+                // Add Tags collection
+                new ExplorerItem("Tags", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "All tags in the repository",
+                    DragText = "Tags",
+                    Children =
+                        [
                             new ExplorerItem("Name", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("CanonicalName", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("IsAnnotated", ExplorerItemKind.Property, ExplorerIcon.Column),
@@ -118,31 +122,31 @@ namespace LearningLINQPad.GitList
                             new ExplorerItem("TaggerEmail", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("TaggerDate", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Target", ExplorerItemKind.ReferenceLink, ExplorerIcon.ManyToOne)
-                        }
-                    });
+                        ]
+                },
 
-                    // Add Remotes collection
-                    schema.Add(new ExplorerItem("Remotes", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "Configured remotes",
-                        DragText = "Remotes",
-                        Children = new List<ExplorerItem>
-                        {
+                // Add Remotes collection
+                new ExplorerItem("Remotes", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "Configured remotes",
+                    DragText = "Remotes",
+                    Children =
+                        [
                             new ExplorerItem("Name", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Url", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("PushUrl", ExplorerItemKind.Property, ExplorerIcon.Column)
-                        }
-                    });
+                        ]
+                },
 
-                    // Add Stashes collection
-                    schema.Add(new ExplorerItem("Stashes", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "All stashes in the repository",
-                        DragText = "Stashes",
-                        Children = new List<ExplorerItem>
-                    {
+                // Add Stashes collection
+                new ExplorerItem("Stashes", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "All stashes in the repository",
+                    DragText = "Stashes",
+                    Children =
+                    [
                         new ExplorerItem("Index", ExplorerItemKind.Property, ExplorerIcon.Column),
                         new ExplorerItem("Reference", ExplorerItemKind.Property, ExplorerIcon.Column),
                         new ExplorerItem("Message", ExplorerItemKind.Property, ExplorerIcon.Column),
@@ -151,31 +155,31 @@ namespace LearningLINQPad.GitList
                         new ExplorerItem("cmd_Apply", ExplorerItemKind.Property, ExplorerIcon.Box),
                         new ExplorerItem("cmd_Pop", ExplorerItemKind.Property, ExplorerIcon.Box),
                         new ExplorerItem("cmd_Drop", ExplorerItemKind.Property, ExplorerIcon.Box)
-                    }
-                    });
+                    ]
+                },
 
-                    // Add Head property
-                    schema.Add(new ExplorerItem("Head", ExplorerItemKind.Property, ExplorerIcon.Column)
-                    {
-                        ToolTipText = "Current HEAD reference",
-                        DragText = "Head"
-                    });
+                // Add Head property
+                new ExplorerItem("Head", ExplorerItemKind.Property, ExplorerIcon.Column)
+                {
+                    ToolTipText = "Current HEAD reference",
+                    DragText = "Head"
+                },
 
-                    // Add RepositoryPath property
-                    schema.Add(new ExplorerItem("RepositoryPath", ExplorerItemKind.Property, ExplorerIcon.Column)
-                    {
-                        ToolTipText = "Path to the repository",
-                        DragText = "RepositoryPath"
-                    });
+                // Add RepositoryPath property
+                new ExplorerItem("RepositoryPath", ExplorerItemKind.Property, ExplorerIcon.Column)
+                {
+                    ToolTipText = "Path to the repository",
+                    DragText = "RepositoryPath"
+                },
 
-                    // Add Status collection (all files with changes)
-                    schema.Add(new ExplorerItem("Status", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
-                    {
-                        IsEnumerable = true,
-                        ToolTipText = "All files with status changes",
-                        DragText = "Status",
-                        Children = new List<ExplorerItem>
-                        {
+                // Add Status collection (all files with changes)
+                new ExplorerItem("Status", ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
+                {
+                    IsEnumerable = true,
+                    ToolTipText = "All files with status changes",
+                    DragText = "Status",
+                    Children =
+                        [
                             new ExplorerItem("FilePath", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Status", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("IndexStatus", ExplorerItemKind.Property, ExplorerIcon.Column),
@@ -190,33 +194,23 @@ namespace LearningLINQPad.GitList
                             new ExplorerItem("cmd_Commit", ExplorerItemKind.Property, ExplorerIcon.Box),
                             new ExplorerItem("cmd_Discard", ExplorerItemKind.Property, ExplorerIcon.Box),
                             new ExplorerItem("cmd_ViewDiff", ExplorerItemKind.Property, ExplorerIcon.Box),
-                        }
-                    });
+                        ]
+                },
 
-                    // Add status properties
-                    schema.Add(new ExplorerItem("IsClean", ExplorerItemKind.Property, ExplorerIcon.Column)
-                    {
-                        ToolTipText = "Is the working directory clean?",
-                        DragText = "IsClean"
-                    });
-
-                    schema.Add(new ExplorerItem("ChangedFilesCount", ExplorerItemKind.Property, ExplorerIcon.Column)
-                    {
-                        ToolTipText = "Number of files with changes",
-                        DragText = "ChangedFilesCount"
-                    });
-
-                    return schema;
-                }
-            }
-            catch (Exception ex)
-            {
-                // If we can't open the repository, return an empty schema
-                return new List<ExplorerItem>
+                // Add status properties
+                new ExplorerItem("IsClean", ExplorerItemKind.Property, ExplorerIcon.Column)
                 {
-                    new ExplorerItem($"Error: {ex.Message}", ExplorerItemKind.Property, ExplorerIcon.Box)
-                };
-            }
+                    ToolTipText = "Is the working directory clean?",
+                    DragText = "IsClean"
+                },
+                new ExplorerItem("ChangedFilesCount", ExplorerItemKind.Property, ExplorerIcon.Column)
+                {
+                    ToolTipText = "Number of files with changes",
+                    DragText = "ChangedFilesCount"
+                }
+            };
+
+            return schema;
         }
 
         public override ParameterDescriptor[] GetContextConstructorParameters(IConnectionInfo cxInfo)
@@ -239,14 +233,14 @@ namespace LearningLINQPad.GitList
         public override IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)
         {
             // Return this driver's assembly so GitContext is available
-            return new[] { typeof(GitContext).Assembly.Location };
+            return [typeof(GitContext).Assembly.Location];
         }
 
         public override IEnumerable<string> GetNamespacesToAdd(IConnectionInfo cxInfo)
         {
             // Add the namespace so types are accessible
             // Using static makes GitContext members directly accessible
-            return new[] { "LearningLINQPad.GitList", "System.Linq", "static LearningLINQPad.GitList.GitContext" };
+            return ["LearningLINQPad.GitList", "System.Linq", "static LearningLINQPad.GitList.GitContext"];
         }
 
         public override void OnQueryFinishing(IConnectionInfo cxInfo, object context, QueryExecutionManager executionManager)

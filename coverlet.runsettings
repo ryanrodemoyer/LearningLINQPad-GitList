@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[LearningLINQPad.GitList]*</Include>
+          <Exclude>[*.Tests]*</Exclude>
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  
+  <!-- Tell Fine Code Coverage to use Coverlet -->
+  <FineCodeCoverage>
+    <Enabled>true</Enabled>
+    <RunMsCodeCoverage>false</RunMsCodeCoverage>
+  </FineCodeCoverage>
+</RunSettings>
