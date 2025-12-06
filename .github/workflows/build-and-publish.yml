@@ -7,12 +7,16 @@ on:
       - 'v*'  # Trigger on version tags (v1.0.0, v1.0.0-beta.1, etc.)
     paths:
       - 'app/**'
+      - '!app/**/*.md'              # Exclude markdown in app folder
+      - '!app/linqpad-samples/**'   # Exclude sample queries (documentation)
       - 'tests/**'
       - '.github/workflows/build-and-publish.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'app/**'
+      - '!app/**/*.md'              # Exclude markdown in app folder
+      - '!app/linqpad-samples/**'   # Exclude sample queries (documentation)
       - 'tests/**'
       - '.github/workflows/build-and-publish.yml'
   workflow_dispatch:
