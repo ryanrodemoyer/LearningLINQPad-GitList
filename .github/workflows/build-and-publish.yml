@@ -3,6 +3,8 @@ name: Build and Publish NuGet Package
 on:
   push:
     branches: [main, develop]
+    tags:
+      - 'v*'  # Trigger on version tags (v1.0.0, v1.0.0-beta.1, etc.)
     paths:
       - 'app/**'
       - 'tests/**'
@@ -60,31 +62,41 @@ jobs:
           dotnet restore app/LearningLINQPad.GitList.csproj
           dotnet restore tests/LearningLINQPad.GitList.Tests.csproj
 
-      - name: Get version from project
+      - name: Get version
         id: get_version
         shell: pwsh
         run: |
-          [xml]$proj = Get-Content app/LearningLINQPad.GitList.csproj
           $version = $null
           
-          # Try to find Version element in PropertyGroup
-          foreach ($propGroup in $proj.Project.PropertyGroup) {
-            if ($propGroup.Version) {
-              $version = $propGroup.Version
-              break
+          # Check if this is a tag push (extract version from tag)
+          if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+            $version = "${{ github.ref }}".Replace("refs/tags/v", "")
+            Write-Host "Version from tag: $version"
+          } else {
+            # Fall back to project file version
+            [xml]$proj = Get-Content app/LearningLINQPad.GitList.csproj
+            
+            foreach ($propGroup in $proj.Project.PropertyGroup) {
+              if ($propGroup.Version) {
+                $version = $propGroup.Version
+                break
+              }
+            }
+            
+            if ([string]::IsNullOrWhiteSpace($version)) {
+              $version = "1.0.${{ github.run_number }}"
+              Write-Host "No version found, using default: $version"
+            } else {
+              Write-Host "Version from project file: $version"
             }
           }
           
-          # If no version found or empty, use default
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            $version = "1.0.${{ github.run_number }}"
-            Write-Host "No version found in project file, using default: $version"
-          } else {
-            Write-Host "Found version in project file: $version"
-          }
+          # Determine if this is a prerelease version (contains hyphen)
+          $isPrerelease = $version -match "-"
           
           echo "version=$version" >> $env:GITHUB_OUTPUT
-          Write-Host "Package version: $version"
+          echo "is_prerelease=$isPrerelease" >> $env:GITHUB_OUTPUT
+          Write-Host "Package version: $version (prerelease: $isPrerelease)"
 
       - name: Build project
         run: dotnet build app/LearningLINQPad.GitList.csproj --configuration Release --no-restore /p:Version=${{ steps.get_version.outputs.version }}
@@ -222,7 +234,7 @@ jobs:
     runs-on: windows-latest
     needs: build
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_nuget == 'true')
     
     environment:
