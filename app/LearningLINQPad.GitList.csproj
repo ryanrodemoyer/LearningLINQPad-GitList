@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	
 	<PropertyGroup>
-		<TargetFrameworks>net8.0-windows</TargetFrameworks>
+		<TargetFramework>net8.0-windows</TargetFramework>
 		<UseWpf>true</UseWpf>
+		<UseWindowsForms>true</UseWindowsForms>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
 		<AssemblyName>LearningLINQPad.GitList</AssemblyName>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageTags>linqpaddriver;git</PackageTags>
@@ -12,25 +14,14 @@
 		<PackageProjectUrl>https://www.learninglinqpad.com</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/ryanrodemoyer/LearningLINQPad-GitList</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
 		<DefineConstants>NETCORE</DefineConstants>
-		<UseWindowsForms>true</UseWindowsForms>
+		<!-- Copy native runtime binaries to output for cross-platform support -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="LibGit2Sharp" Version="0.31.0" />
 		<PackageReference Include="LINQPad.Reference" Version="1.*" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-		<Reference Include="System.Xaml">
-			<RequiredTargetFramework>4.0</RequiredTargetFramework>
-		</Reference>
-		<Reference Include="WindowsBase" />
-		<Reference Include="PresentationCore" />
-		<Reference Include="PresentationFramework" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -40,16 +31,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="linqpad-samples\\*.*" />
-		<Folder Include="linqpad-samples\\" />
+		<Content Include="linqpad-samples/**/*.*" />
 	</ItemGroup>	
 
-	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
 		<Exec Command="xcopy /i/y/s &quot;$(TargetDir)*.*&quot; &quot;%25LocalAppData%25\\LINQPad\\Drivers\\DataContext\\NetCore\\$(TargetName)&quot;" />
-	</Target>
-
-	<Target Name="PostBuild2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net46'">
-		<Exec Command="xcopy /i/y/s &quot;$(TargetDir)*.*&quot; &quot;%25LocalAppData%25\\LINQPad\\Drivers\\DataContext\\4.6\\$(TargetName) (no-strong-name)&quot;" />
+		<ZipDirectory SourceDirectory="$(TargetDir)" DestinationFile="$(ProjectDir)..\\_output\\$(TargetName).lpx6" Overwrite="true" />
 	</Target>
 
 </Project>
