@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 
 using LINQPad.Extensibility.DataContext;
 
@@ -10,6 +11,8 @@ namespace LearningLINQPad.GitList
     class ConnectionProperties : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private const string DefaultBeyondComparePath = @"C:\Program Files\Beyond Compare 4\BComp.exe";
 
         public IConnectionInfo ConnectionInfo { get; private set; }
 
@@ -30,7 +33,21 @@ namespace LearningLINQPad.GitList
 
         public string BeyondComparePath
         {
-            get => (string)ConnectionInfo.DriverData.Element("BeyondComparePath") ?? "";
+            get
+            {
+                var savedPath = (string)ConnectionInfo.DriverData.Element("BeyondComparePath");
+
+                // If a path is saved, return it (even if empty, user may have cleared it intentionally)
+                if (savedPath != null)
+                    return savedPath;
+
+                // No saved value - check if default Beyond Compare path exists
+                if (File.Exists(DefaultBeyondComparePath))
+                    return DefaultBeyondComparePath;
+
+                // Default path doesn't exist, return empty
+                return "";
+            }
             set
             {
                 ConnectionInfo.DriverData.SetElementValue("BeyondComparePath", value);
