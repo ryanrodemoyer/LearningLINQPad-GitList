@@ -31,7 +31,7 @@ if (Unstaged.Any())
 	Unstaged
 		.Select(s => new {
 			s.FilePath,
-			s.WorkDirStatus,
+			s.Status,
 			Stage = s.StageButton,
 			Discard = s.DiscardButton
 		})
@@ -45,7 +45,7 @@ if (Staged.Any())
 	Staged
 		.Select(s => new {
 			s.FilePath,
-			s.IndexStatus,
+			s.IsStaged,
 			Unstage = s.UnstageButton,
 			Commit = s.CommitButton
 		})

@@ -20,11 +20,7 @@ else
 		Staged
 			.Select(s => new {
 				File = s.FilePath,
-				Change = s.IndexStatus,
-				Icon = s.IndexStatus == "Added" ? "➕" :
-					   s.IndexStatus == "Modified" ? "✏️" :
-					   s.IndexStatus == "Deleted" ? "🗑️" :
-					   s.IndexStatus == "Renamed" ? "📝" : "❓"
+				Staged = s.IsStaged
 			})
 			.Dump("Staged for Commit");
 	}
@@ -40,7 +36,7 @@ else
 		Unstaged
 			.Select(s => new {
 				File = s.FilePath,
-				Change = s.WorkDirStatus
+				Change = s.Status
 			})
 			.Dump("Not Staged");
 	}

@@ -33,8 +33,7 @@ if (Status.Any())
 	Status
 		.Select(s => new {
 			s.FilePath,
-			WorkingDirectory = s.WorkDirStatus,
-			Index = s.IndexStatus,
+			s.Status,
 			Summary = s.IsStaged ? "Staged" :
 					 s.HasUnstagedChanges ? "Modified" :
 					 s.IsUntracked ? "New" :

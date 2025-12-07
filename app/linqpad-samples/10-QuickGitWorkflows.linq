@@ -12,7 +12,7 @@ if (Unstaged.Any())
 	Unstaged
 		.Select(s => new {
 			File = s.FilePath,
-			Change = s.WorkDirStatus,
+			Change = s.Status,
 			Action = s.StageButton
 		})
 		.Dump("Click 'Stage' for files you want to include in next commit");
@@ -27,7 +27,7 @@ if (Staged.Any())
 	Staged
 		.Select(s => new {
 			File = s.FilePath,
-			Type = s.IndexStatus,
+			Staged = s.IsStaged,
 			CommitThis = s.CommitButton,
 			UnstageThis = s.UnstageButton
 		})

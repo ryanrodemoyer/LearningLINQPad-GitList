@@ -5,6 +5,7 @@ using System.Linq;
 using LibGit2Sharp;
 
 using LINQPad;
+using LINQPad.Controls;
 
 namespace LearningLINQPad.GitList
 {
@@ -162,48 +163,230 @@ namespace LearningLINQPad.GitList
         public string FilePath => _entry.FilePath;
 
         /// <summary>
-        /// Status in the index (staging area)
+        /// Preview of changes showing lines added and removed (e.g., "+10 -5")
+        /// Similar to posh-git style diff summary with color coding:
+        /// Green bold for additions, red bold for deletions, orange bold for untracked
         /// </summary>
-        public string IndexStatus => _entry.State.HasFlag(FileStatus.NewInIndex) ? "Added" :
-                                      _entry.State.HasFlag(FileStatus.ModifiedInIndex) ? "Modified" :
-                                      _entry.State.HasFlag(FileStatus.DeletedFromIndex) ? "Deleted" :
-                                      _entry.State.HasFlag(FileStatus.RenamedInIndex) ? "Renamed" :
-                                      _entry.State.HasFlag(FileStatus.TypeChangeInIndex) ? "TypeChange" :
-                                      "Unmodified";
-
-        /// <summary>
-        /// Status in the working directory
-        /// </summary>
-        public string WorkDirStatus => _entry.State.HasFlag(FileStatus.NewInWorkdir) ? "Untracked" :
-                                        _entry.State.HasFlag(FileStatus.ModifiedInWorkdir) ? "Modified" :
-                                        _entry.State.HasFlag(FileStatus.DeletedFromWorkdir) ? "Deleted" :
-                                        _entry.State.HasFlag(FileStatus.RenamedInWorkdir) ? "Renamed" :
-                                        _entry.State.HasFlag(FileStatus.TypeChangeInWorkdir) ? "TypeChange" :
-                                        "Unmodified";
-
-        /// <summary>
-        /// Combined status description
-        /// </summary>
-        public string Status
+        public object DiffPreview
         {
             get
             {
-                var parts = new List<string>();
-                if (IndexStatus != "Unmodified") parts.Add($"Index: {IndexStatus}");
-                if (WorkDirStatus != "Unmodified") parts.Add($"WorkDir: {WorkDirStatus}");
-                return parts.Any() ? string.Join(", ", parts) : "Unmodified";
+                if (_repository == null) return null;
+
+                try
+                {
+                    // For untracked/new files, count all lines as additions (orange bold)
+                    if (_entry.State.HasFlag(FileStatus.NewInWorkdir) ||
+                        _entry.State.HasFlag(FileStatus.NewInIndex))
+                    {
+                        string fullFilePath = System.IO.Path.Combine(_repositoryPath, FilePath);
+                        string text = System.IO.File.Exists(fullFilePath)
+                            ? $"+{System.IO.File.ReadAllLines(fullFilePath).Length}"
+                            : "+?";
+
+                        return new Div(new Span(text)
+                        {
+                            Styles =
+                            {
+                                ["color"] = "orange",
+                                ["font-weight"] = "bold"
+                            }
+                        }) { Styles = { ["text-align"] = "center" } };
+                    }
+
+                    // For deleted files (red bold)
+                    if (_entry.State.HasFlag(FileStatus.DeletedFromWorkdir) ||
+                        _entry.State.HasFlag(FileStatus.DeletedFromIndex))
+                    {
+                        var headCommit = _repository.Head.Tip;
+                        var treeEntry = headCommit?[FilePath];
+                        string text = "-?";
+                        if (treeEntry != null)
+                        {
+                            var blob = (Blob)treeEntry.Target;
+                            using (var stream = blob.GetContentStream())
+                            using (var reader = new System.IO.StreamReader(stream))
+                            {
+                                var content = reader.ReadToEnd();
+                                int lineCount = content.Split('\n').Length;
+                                text = $"-{lineCount}";
+                            }
+                        }
+
+                        return new Div(new Span(text)
+                        {
+                            Styles =
+                            {
+                                ["color"] = "red",
+                                ["font-weight"] = "bold"
+                            }
+                        }) { Styles = { ["text-align"] = "center" } };
+                    }
+
+                    string fullPath = System.IO.Path.Combine(_repositoryPath, FilePath);
+
+                    // For modified files, compare with HEAD
+                    if (_entry.State.HasFlag(FileStatus.ModifiedInWorkdir) ||
+                        _entry.State.HasFlag(FileStatus.ModifiedInIndex))
+                    {
+                        var headCommit = _repository.Head.Tip;
+                        var treeEntry = headCommit?[FilePath];
+
+                        if (treeEntry == null)
+                        {
+                            // File is new (not in HEAD) - orange bold
+                            string text = System.IO.File.Exists(fullPath)
+                                ? $"+{System.IO.File.ReadAllLines(fullPath).Length}"
+                                : "+?";
+
+                            return new Div(new Span(text)
+                            {
+                                Styles =
+                                {
+                                    ["color"] = "orange",
+                                    ["font-weight"] = "bold"
+                                }
+                            }) { Styles = { ["text-align"] = "center" } };
+                        }
+
+                        // Use LibGit2Sharp's diff to get accurate line counts
+                        var patch = _repository.Diff.Compare<Patch>(
+                            new[] { FilePath },
+                            true,  // include untracked
+                            new ExplicitPathsOptions());
+
+                        if (patch != null)
+                        {
+                            var filePatch = patch[FilePath];
+                            if (filePatch != null)
+                            {
+                                int added = filePatch.LinesAdded;
+                                int deleted = filePatch.LinesDeleted;
+
+                                if (added > 0 && deleted > 0)
+                                {
+                                    // Both additions and deletions - show both with colors
+                                    var addSpan = new Span($"+{added}")
+                                    {
+                                        Styles =
+                                        {
+                                            ["color"] = "green",
+                                            ["font-weight"] = "bold"
+                                        }
+                                    };
+                                    var delSpan = new Span($" -{deleted}")
+                                    {
+                                        Styles =
+                                        {
+                                            ["color"] = "red",
+                                            ["font-weight"] = "bold"
+                                        }
+                                    };
+                                    return new Div(addSpan, delSpan) { Styles = { ["text-align"] = "center" } };
+                                }
+                                else if (added > 0)
+                                {
+                                    return new Div(new Span($"+{added}")
+                                    {
+                                        Styles =
+                                        {
+                                            ["color"] = "green",
+                                            ["font-weight"] = "bold"
+                                        }
+                                    }) { Styles = { ["text-align"] = "center" } };
+                                }
+                                else if (deleted > 0)
+                                {
+                                    return new Div(new Span($"-{deleted}")
+                                    {
+                                        Styles =
+                                        {
+                                            ["color"] = "red",
+                                            ["font-weight"] = "bold"
+                                        }
+                                    }) { Styles = { ["text-align"] = "center" } };
+                                }
+                                else
+                                {
+                                    return new Div(new Span("~0")) { Styles = { ["text-align"] = "center" } };
+                                }
+                            }
+                        }
+
+                        // Fallback: simple line count difference
+                        var blob2 = (Blob)treeEntry.Target;
+                        string[] headLines;
+                        using (var stream = blob2.GetContentStream())
+                        using (var reader = new System.IO.StreamReader(stream))
+                        {
+                            headLines = reader.ReadToEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        }
+
+                        string[] workingLines = System.IO.File.Exists(fullPath)
+                            ? System.IO.File.ReadAllLines(fullPath)
+                            : Array.Empty<string>();
+
+                        int diff = workingLines.Length - headLines.Length;
+                        if (diff > 0)
+                        {
+                            return new Div(new Span($"+{diff}")
+                            {
+                                Styles =
+                                {
+                                    ["color"] = "green",
+                                    ["font-weight"] = "bold"
+                                }
+                            }) { Styles = { ["text-align"] = "center" } };
+                        }
+                        else if (diff < 0)
+                        {
+                            return new Div(new Span($"{diff}")
+                            {
+                                Styles =
+                                {
+                                    ["color"] = "red",
+                                    ["font-weight"] = "bold"
+                                }
+                            }) { Styles = { ["text-align"] = "center" } };
+                        }
+                        else
+                        {
+                            return new Div(new Span("~")) { Styles = { ["text-align"] = "center" } };
+                        }
+                    }
+                }
+                catch
+                {
+                    // Silently fail - diff preview is not critical
+                }
+
+                return null;
             }
         }
 
         /// <summary>
+        /// Status in the working directory
+        /// </summary>
+        public string Status => _entry.State.HasFlag(FileStatus.NewInWorkdir) ? "Untracked" :
+                                _entry.State.HasFlag(FileStatus.ModifiedInWorkdir) ? "Modified" :
+                                _entry.State.HasFlag(FileStatus.DeletedFromWorkdir) ? "Deleted" :
+                                _entry.State.HasFlag(FileStatus.RenamedInWorkdir) ? "Renamed" :
+                                _entry.State.HasFlag(FileStatus.TypeChangeInWorkdir) ? "TypeChange" :
+                                "Unmodified";
+
+        /// <summary>
         /// Is this file staged (in the index)?
         /// </summary>
-        public bool IsStaged => IndexStatus != "Unmodified";
+        public bool IsStaged => _entry.State.HasFlag(FileStatus.NewInIndex) ||
+                                _entry.State.HasFlag(FileStatus.ModifiedInIndex) ||
+                                _entry.State.HasFlag(FileStatus.DeletedFromIndex) ||
+                                _entry.State.HasFlag(FileStatus.RenamedInIndex) ||
+                                _entry.State.HasFlag(FileStatus.TypeChangeInIndex);
 
         /// <summary>
         /// Does this file have unstaged changes?
         /// </summary>
-        public bool HasUnstagedChanges => WorkDirStatus != "Unmodified" && WorkDirStatus != "Untracked";
+        public bool HasUnstagedChanges => Status != "Unmodified" && Status != "Untracked";
 
         /// <summary>
         /// Is this file untracked?
@@ -229,7 +412,7 @@ namespace LearningLINQPad.GitList
             {
                 if (IsStaged || _repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Stage", _ =>
+                var button = new Button("Stage", _ =>
                 {
                     try
                     {
@@ -241,7 +424,7 @@ namespace LearningLINQPad.GitList
                         $"Error staging {FilePath}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -254,7 +437,7 @@ namespace LearningLINQPad.GitList
             {
                 if (!IsStaged || _repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Unstage", _ =>
+                var button = new Button("Unstage", _ =>
                 {
                     try
                     {
@@ -266,7 +449,7 @@ namespace LearningLINQPad.GitList
                         $"Error unstaging {FilePath}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -279,7 +462,7 @@ namespace LearningLINQPad.GitList
             {
                 if (_repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Commit", _ =>
+                var button = new Button("Commit", _ =>
                 {
                     try
                     {
@@ -318,20 +501,61 @@ namespace LearningLINQPad.GitList
                         $"Error committing {FilePath}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
         /// <summary>
-        /// Button to discard changes to this file
+        /// Button to discard changes or delete untracked files
         /// </summary>
         public object cmd_Discard
         {
             get
             {
-                if (!HasUnstagedChanges || _repository == null) return null;
+                if (_repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Discard", _ =>
+                // For untracked files, show Delete button
+                if (IsUntracked)
+                {
+                    var deleteButton = new Button("Delete", _ =>
+                    {
+                        try
+                        {
+                            var confirmed = Util.ReadLine($"Are you sure you want to DELETE {FilePath}? This cannot be undone! (yes/no)", "no");
+                            if (confirmed?.ToLower() != "yes")
+                            {
+                                "Delete cancelled".Dump();
+                                return;
+                            }
+
+                            string fullFilePath = System.IO.Path.Combine(_repositoryPath, FilePath);
+                            if (System.IO.File.Exists(fullFilePath))
+                            {
+                                System.IO.File.Delete(fullFilePath);
+                                $"✓ Deleted: {FilePath}".Dump();
+                            }
+                            else if (System.IO.Directory.Exists(fullFilePath))
+                            {
+                                System.IO.Directory.Delete(fullFilePath, true);
+                                $"✓ Deleted directory: {FilePath}".Dump();
+                            }
+                            else
+                            {
+                                $"File not found: {FilePath}".Dump();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            $"Error deleting {FilePath}: {ex.Message}".Dump();
+                        }
+                    });
+                    return new Div(deleteButton) { Styles = { ["text-align"] = "center" } };
+                }
+
+                // For modified/deleted files, show Discard button
+                if (!HasUnstagedChanges) return null;
+
+                var button = new Button("Discard", _ =>
                 {
                     try
                     {
@@ -354,7 +578,7 @@ namespace LearningLINQPad.GitList
                         $"Error discarding changes to {FilePath}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -370,7 +594,7 @@ namespace LearningLINQPad.GitList
                 // Only show for files with changes
                 if (!IsStaged && !HasUnstagedChanges && !IsUntracked) return null;
 
-                var button = new LINQPad.Controls.Button("View Diff", _ =>
+                var button = new Button("View Diff", _ =>
                 {
                     try
                     {
@@ -460,7 +684,7 @@ namespace LearningLINQPad.GitList
                         $"Error opening diff for {FilePath}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -608,7 +832,7 @@ namespace LearningLINQPad.GitList
             {
                 if (_repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Apply", _ =>
+                var button = new Button("Apply", _ =>
                 {
                     try
                     {
@@ -620,7 +844,7 @@ namespace LearningLINQPad.GitList
                         $"Error applying stash {Reference}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -633,7 +857,7 @@ namespace LearningLINQPad.GitList
             {
                 if (_repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Pop", _ =>
+                var button = new Button("Pop", _ =>
                 {
                     try
                     {
@@ -645,7 +869,7 @@ namespace LearningLINQPad.GitList
                         $"Error popping stash {Reference}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 
@@ -658,7 +882,7 @@ namespace LearningLINQPad.GitList
             {
                 if (_repository == null) return null;
 
-                var button = new LINQPad.Controls.Button("Drop", _ =>
+                var button = new Button("Drop", _ =>
                 {
                     try
                     {
@@ -677,7 +901,7 @@ namespace LearningLINQPad.GitList
                         $"Error dropping stash {Reference}: {ex.Message}".Dump();
                     }
                 });
-                return button;
+                return new Div(button) { Styles = { ["text-align"] = "center" } };
             }
         }
 

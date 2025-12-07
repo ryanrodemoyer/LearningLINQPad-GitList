@@ -182,8 +182,6 @@ namespace LearningLINQPad.GitList
                         [
                             new ExplorerItem("FilePath", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("Status", ExplorerItemKind.Property, ExplorerIcon.Column),
-                            new ExplorerItem("IndexStatus", ExplorerItemKind.Property, ExplorerIcon.Column),
-                            new ExplorerItem("WorkDirStatus", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("IsStaged", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("HasUnstagedChanges", ExplorerItemKind.Property, ExplorerIcon.Column),
                             new ExplorerItem("IsUntracked", ExplorerItemKind.Property, ExplorerIcon.Column),

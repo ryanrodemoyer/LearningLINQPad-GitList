@@ -32,8 +32,7 @@ if (Staged.Any())
 	Staged
 		.Select(s => new {
 			s.FilePath,
-			s.IndexStatus,
-			Type = s.IndexStatus
+			s.IsStaged
 		})
 		.Dump("📦 Staged Changes (Ready to Commit)");
 }
@@ -48,8 +47,8 @@ if (Unstaged.Any())
 	Unstaged
 		.Select(s => new {
 			s.FilePath,
-			s.WorkDirStatus,
-			Type = s.WorkDirStatus
+			s.Status,
+			Type = s.Status
 		})
 		.Dump("📝 Unstaged Changes");
 }
@@ -85,7 +84,7 @@ if (Conflicted.Any())
 
 // Group changes by type
 Status
-	.GroupBy(s => s.IndexStatus != "Unmodified" ? s.IndexStatus : s.WorkDirStatus)
+	.GroupBy(s => s.IsStaged ? "Staged" : s.Status)
 	.Select(g => new {
 		ChangeType = g.Key,
 		Count = g.Count(),

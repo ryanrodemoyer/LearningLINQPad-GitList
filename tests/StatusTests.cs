@@ -236,7 +236,7 @@ public class GitStatusEntryTests
 	}
 
 	[Fact]
-	public void GitStatusEntry_IndexStatus_ReturnsAddedForNewInIndex()
+	public void GitStatusEntry_IsStaged_TrueForNewInIndex()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -249,11 +249,11 @@ public class GitStatusEntryTests
 		var entry = GitContext.Staged.First();
 
 		// Assert
-		Assert.Equal("Added", entry.IndexStatus);
+		Assert.True(entry.IsStaged);
 	}
 
 	[Fact]
-	public void GitStatusEntry_IndexStatus_ReturnsModifiedForModifiedInIndex()
+	public void GitStatusEntry_IsStaged_TrueForModifiedInIndex()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -266,11 +266,11 @@ public class GitStatusEntryTests
 		var entry = GitContext.Staged.First();
 
 		// Assert
-		Assert.Equal("Modified", entry.IndexStatus);
+		Assert.True(entry.IsStaged);
 	}
 
 	[Fact]
-	public void GitStatusEntry_WorkDirStatus_ReturnsUntrackedForNewInWorkdir()
+	public void GitStatusEntry_Status_ReturnsUntrackedForNewInWorkdir()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -282,11 +282,11 @@ public class GitStatusEntryTests
 		var entry = GitContext.Untracked.First();
 
 		// Assert
-		Assert.Equal("Untracked", entry.WorkDirStatus);
+		Assert.Equal("Untracked", entry.Status);
 	}
 
 	[Fact]
-	public void GitStatusEntry_WorkDirStatus_ReturnsModifiedForModifiedInWorkdir()
+	public void GitStatusEntry_Status_ReturnsModifiedForModifiedInWorkdir()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -298,7 +298,7 @@ public class GitStatusEntryTests
 		var entry = GitContext.Unstaged.First();
 
 		// Assert
-		Assert.Equal("Modified", entry.WorkDirStatus);
+		Assert.Equal("Modified", entry.Status);
 	}
 
 	[Fact]
@@ -401,7 +401,7 @@ public class GitStatusEntryTests
 	}
 
 	[Fact]
-	public void GitStatusEntry_IndexStatus_ReturnsDeletedForDeletedFromIndex()
+	public void GitStatusEntry_IsStaged_TrueForDeletedFromIndex()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -414,11 +414,11 @@ public class GitStatusEntryTests
 		var entry = GitContext.Staged.First();
 
 		// Assert
-		Assert.Equal("Deleted", entry.IndexStatus);
+		Assert.True(entry.IsStaged);
 	}
 
 	[Fact]
-	public void GitStatusEntry_WorkDirStatus_ReturnsDeletedForDeletedFromWorkdir()
+	public void GitStatusEntry_Status_ReturnsDeletedForDeletedFromWorkdir()
 	{
 		// Arrange
 		using var fixture = new TestRepositoryFixture();
@@ -430,6 +430,6 @@ public class GitStatusEntryTests
 		var entry = GitContext.Unstaged.First();
 
 		// Assert
-		Assert.Equal("Deleted", entry.WorkDirStatus);
+		Assert.Equal("Deleted", entry.Status);
 	}
 }
