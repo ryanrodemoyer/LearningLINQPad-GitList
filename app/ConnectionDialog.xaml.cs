@@ -4,12 +4,6 @@ using System.IO;
 
 using LINQPad.Extensibility.DataContext;
 
-#if NETCORE
-using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
-#else
-using System.Windows.Forms;
-#endif
-
 namespace LearningLINQPad.GitList
 {
     public partial class ConnectionDialog : Window
@@ -57,27 +51,26 @@ namespace LearningLINQPad.GitList
 
         void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new FolderBrowserDialog
+            var dialog = new Microsoft.Win32.OpenFolderDialog
             {
-                Description = "Select Git Repository Folder",
-                ShowNewFolderButton = false
+                Title = "Select Git Repository Folder"
             };
 
             var props = (ConnectionProperties)DataContext;
-            if (!string.IsNullOrWhiteSpace(props.RepositoryPath))
+            if (!string.IsNullOrWhiteSpace(props.RepositoryPath) && Directory.Exists(props.RepositoryPath))
             {
-                dialog.SelectedPath = props.RepositoryPath;
+                dialog.InitialDirectory = props.RepositoryPath;
             }
 
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (dialog.ShowDialog() == true)
             {
-                props.RepositoryPath = dialog.SelectedPath;
+                props.RepositoryPath = dialog.FolderName;
             }
         }
 
         void btnBrowseBeyondCompare_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new System.Windows.Forms.OpenFileDialog
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Title = "Select Beyond Compare Executable",
                 Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
@@ -85,12 +78,12 @@ namespace LearningLINQPad.GitList
             };
 
             var props = (ConnectionProperties)DataContext;
-            if (!string.IsNullOrWhiteSpace(props.BeyondComparePath))
+            if (!string.IsNullOrWhiteSpace(props.BeyondComparePath) && File.Exists(props.BeyondComparePath))
             {
                 dialog.FileName = props.BeyondComparePath;
             }
 
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (dialog.ShowDialog() == true)
             {
                 props.BeyondComparePath = dialog.FileName;
             }
